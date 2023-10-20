@@ -1,0 +1,68 @@
+---
+title: "ProblemSet4"
+author: "Yangning Tan"
+format: html
+editor: visual
+---
+
+## Problem 1 - Tidyverse
+
+```{r}
+# install package
+library(nycflights13)
+library(tidyverse)
+```
+
+1.  Generate a table (which can just be a nicely printed tibble) reporting the mean and median departure delay per airport. Generate a second table (which again can be a nicely printed tibble) reporting the mean and median arrival delay per airport. Exclude any destination with under 10 flights. Do this exclusion through code, not manually.
+
+    Additionally,
+
+    -   Order both tables in descending mean delay.
+
+    -   Both tables should use the airport *names* not the airport *codes*.
+
+    -   Both tables should print all rows.
+
+    ```{r}
+    # mean and median of departure delay
+    tb_flights <- nycflights13::flights
+
+    tb_flights %>% 
+      inner_join(nycflights13::airports, by = c("origin" = "faa")) %>% 
+      select(name, dep_delay) %>% 
+      group_by(name) %>% 
+      summarise(dep_delay_mean = mean(dep_delay, na.rm = TRUE),
+                dep_delay_median = median(dep_delay, na.rm = TRUE)) %>% 
+      arrange(desc(dep_delay_mean))
+    ```
+
+    ```{r}
+    # mean and median of arrival delay
+    tb_flights %>%
+      inner_join(nycflights13::airports, by = c("dest" = "faa")) %>%
+      group_by(dest) %>%
+      filter(n() >= 10) %>%
+      ungroup() %>% 
+      select(name, arr_delay) %>%
+      group_by(name) %>%
+      summarise(arr_delay_mean = mean(arr_delay, na.rm = TRUE),
+                arr_delay_median = median(arr_delay, na.rm = TRUE)) %>% 
+      arrange(desc(arr_delay_mean))
+    ```
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
