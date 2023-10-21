@@ -13,7 +13,7 @@ library(nycflights13)
 library(tidyverse)
 ```
 
-1.  Generate a table (which can just be a nicely printed tibble) reporting the mean and median departure delay per airport. Generate a second table (which again can be a nicely printed tibble) reporting the mean and median arrival delay per airport. Exclude any destination with under 10 flights. Do this exclusion through code, not manually.
+a.  Generate a table (which can just be a nicely printed tibble) reporting the mean and median departure delay per airport. Generate a second table (which again can be a nicely printed tibble) reporting the mean and median arrival delay per airport. Exclude any destination with under 10 flights. Do this exclusion through code, not manually.
 
     Additionally,
 
@@ -52,7 +52,7 @@ library(tidyverse)
       arrange(desc(arr_delay_mean))
     ```
 
-2.  How many flights did the aircraft model with the fastest average speed take? Produce a tibble with 1 row, and entires for the model, average speed (in MPH) and number of flights.
+b.  How many flights did the aircraft model with the fastest average speed take? Produce a tibble with 1 row, and entires for the model, average speed (in MPH) and number of flights.
 
     We first create a tibble of the planes.
 
@@ -65,10 +65,10 @@ library(tidyverse)
     ```{r}
     tb_flights %>% 
       left_join(tb_planes, by = c("tailnum" = "tailnum")) %>% 
-      select(model, distance, hour, minute) %>% 
+      select(model, distance, air_time) %>% 
       group_by(model) %>% 
-      summarise(total_distance = sum(distance),
-                total_time = sum(hour) + sum(minute) / 60,
+      summarise(total_distance = sum(distance, na.rm = TRUE),
+                total_time = sum(air_time, na.rm = TRUE) / 60,
                 average_speed = total_distance / total_time,
                 number_of_flights = n()) %>% 
       ungroup() -> average_speed
@@ -97,6 +97,11 @@ Then we write the function.
 
 ```{r}
 get_temp <- function(month_input, year_input, data, celsius = FALSE, average_fn = mean){
+  # check the validity of input year
+  if (year_input < 1997 | year_input > 2000) {
+    stop("Invalid input: Year should be between 1997 and 2000")
+  }
+  
   # convert all kinds of input of month into numeric form
   convert_month_to_numeric <- function(month_input) {
   month_mapping <- c("Jan" = 1, "Feb" = 2, "Mar" = 3, "Apr" = 4, "May" = 5, "Jun" = 6, "Jul" = 7, "Aug" = 8, "Sep" = 9, "Oct" = 10, "Nov" = 11, "Dec" = 12)
@@ -140,3 +145,19 @@ get_temp <- function(month_input, year_input, data, celsius = FALSE, average_fn 
   return(average_temp)
 }
 ```
+
+Finally, we check whether the code works.
+
+```{r}
+# valid input
+get_temp("Apr", 1999, data = nnmaps)
+get_temp("Apr", 1999, data = nnmaps, celsius = TRUE)
+get_temp(10, 1998, data = nnmaps, average_fn = median)
+get_temp("November", 1999, data =nnmaps, celsius = TRUE,
+         average_fn = function(x) {
+           x %>% sort -> x
+           x[2:(length(x) - 1)] %>% mean %>% return
+         })
+```
+
+If the input is valid, we can get a result. When the input is invalid, it can produce a reasonable error message.

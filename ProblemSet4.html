@@ -120,7 +120,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
 </div>
 </div>
-<ol type="1">
+<ol type="a">
 <li><p>Generate a table (which can just be a nicely printed tibble) reporting the mean and median departure delay per airport. Generate a second table (which again can be a nicely printed tibble) reporting the mean and median arrival delay per airport. Exclude any destination with under 10 flights. Do this exclusion through code, not manually.</p>
 <p>Additionally,</p>
 <ul>
@@ -151,17 +151,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># mean and median of arrival delay</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>tb_flights <span class="sc">%&gt;%</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(nycflights13<span class="sc">::</span>airports, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dest"</span> <span class="ot">=</span> <span class="st">"faa"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#left_join(nycflights13::airports, by = c("dest" = "faa")) %&gt;%</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(dest) <span class="sc">%&gt;%</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">n</span>() <span class="sc">&gt;=</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, arr_delay) <span class="sc">%&gt;%</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(name) <span class="sc">%&gt;%</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(dest, arr_delay) <span class="sc">%&gt;%</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(dest) <span class="sc">%&gt;%</span></span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">arr_delay_mean =</span> <span class="fu">mean</span>(arr_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">arr_delay_median =</span> <span class="fu">median</span>(arr_delay, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(arr_delay_mean))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(nycflights13<span class="sc">::</span>airports, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dest"</span> <span class="ot">=</span> <span class="st">"faa"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, arr_delay_mean, arr_delay_median) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(arr_delay_mean))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 99 × 3
+<pre><code># A tibble: 102 × 3
    name                          arr_delay_mean arr_delay_median
    &lt;chr&gt;                                  &lt;dbl&gt;            &lt;dbl&gt;
  1 Columbia Metropolitan                   41.8               28
@@ -174,7 +176,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  8 Akron Canton Regional Airport           19.7                3
  9 Des Moines Intl                         19.0                0
 10 Gerald R Ford Intl                      18.2                1
-# ℹ 89 more rows</code></pre>
+# ℹ 92 more rows</code></pre>
 </div>
 </div></li>
 <li><p>How many flights did the aircraft model with the fastest average speed take? Produce a tibble with 1 row, and entires for the model, average speed (in MPH) and number of flights.</p>
@@ -186,10 +188,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tb_flights <span class="sc">%&gt;%</span> </span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(tb_planes, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"tailnum"</span> <span class="ot">=</span> <span class="st">"tailnum"</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(model, distance, hour, minute) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(model, distance, air_time) <span class="sc">%&gt;%</span> </span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(model) <span class="sc">%&gt;%</span> </span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_distance =</span> <span class="fu">sum</span>(distance),</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">total_time =</span> <span class="fu">sum</span>(hour) <span class="sc">+</span> <span class="fu">sum</span>(minute) <span class="sc">/</span> <span class="dv">60</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_distance =</span> <span class="fu">sum</span>(distance, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">total_time =</span> <span class="fu">sum</span>(air_time, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="dv">60</span>,</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">average_speed =</span> total_distance <span class="sc">/</span> total_time,</span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">number_of_flights =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span> </span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="ot">-&gt;</span> average_speed</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -202,29 +204,112 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>fastest_model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 3
-  model    average_speed number_of_flights
-  &lt;chr&gt;            &lt;dbl&gt;             &lt;int&gt;
-1 A330-243          511.               342</code></pre>
+  model   average_speed number_of_flights
+  &lt;chr&gt;           &lt;dbl&gt;             &lt;int&gt;
+1 777-232          681.                 4</code></pre>
 </div>
 </div></li>
 </ol>
 </section>
-<section id="running-code" class="level2">
-<h2 class="anchored" data-anchor-id="running-code">Running Code</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
+<section id="problem-2" class="level2">
+<h2 class="anchored" data-anchor-id="problem-2">Problem 2</h2>
+<p>Load the Chicago NNMAPS data we used in the visualization lectures. Write a function&nbsp;<code>get_temp()</code>&nbsp;that allows a user to request the average temperature for a given month.</p>
+<p>We first import the data.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>nnmaps <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"/Users/tyn/Documents/R/chicago-nmmaps.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<p>You can add options to executable code like this</p>
+<p>Then we write the function.</p>
 <div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>get_temp <span class="ot">&lt;-</span> <span class="cf">function</span>(month_input, year_input, data, <span class="at">celsius =</span> <span class="cn">FALSE</span>, <span class="at">average_fn =</span> mean){</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># check the validity of input year</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (year_input <span class="sc">&lt;</span> <span class="dv">1997</span> <span class="sc">|</span> year_input <span class="sc">&gt;</span> <span class="dv">2000</span>) {</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid input: Year should be between 1997 and 2000"</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># convert all kinds of input of month into numeric form</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  convert_month_to_numeric <span class="ot">&lt;-</span> <span class="cf">function</span>(month_input) {</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  month_mapping <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Jan"</span> <span class="ot">=</span> <span class="dv">1</span>, <span class="st">"Feb"</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">"Mar"</span> <span class="ot">=</span> <span class="dv">3</span>, <span class="st">"Apr"</span> <span class="ot">=</span> <span class="dv">4</span>, <span class="st">"May"</span> <span class="ot">=</span> <span class="dv">5</span>, <span class="st">"Jun"</span> <span class="ot">=</span> <span class="dv">6</span>, <span class="st">"Jul"</span> <span class="ot">=</span> <span class="dv">7</span>, <span class="st">"Aug"</span> <span class="ot">=</span> <span class="dv">8</span>, <span class="st">"Sep"</span> <span class="ot">=</span> <span class="dv">9</span>, <span class="st">"Oct"</span> <span class="ot">=</span> <span class="dv">10</span>, <span class="st">"Nov"</span> <span class="ot">=</span> <span class="dv">11</span>, <span class="st">"Dec"</span> <span class="ot">=</span> <span class="dv">12</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.numeric</span>(month_input)) {</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Check if the input is a numeric value between 1 and 12</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (month_input <span class="sc">&gt;=</span> <span class="dv">1</span> <span class="sc">&amp;&amp;</span> month_input <span class="sc">&lt;=</span> <span class="dv">12</span>) {</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(month_input)</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="st">"Invalid input: Numeric month should be between 1 and 12."</span>)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">is.character</span>(month_input)) {</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Check if the input is a valid month name or abbreviation</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    formatted_input <span class="ot">&lt;-</span> <span class="fu">substr</span>(month_input, <span class="dv">1</span>, <span class="dv">3</span>)</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (formatted_input <span class="sc">%in%</span> <span class="fu">names</span>(month_mapping)) {</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(month_mapping[formatted_input])</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="st">"Invalid input: Not a recognized month name or abbreviation."</span>)</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Invalid input: Input should be a numeric value, a valid month name, or a valid month abbreviation."</span>)</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  month_input <span class="ot">&lt;-</span> <span class="fu">convert_month_to_numeric</span>(month_input)</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>  <span class="co"># filter the data</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>  filtered_data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(temp, year, month_numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year, month_numeric) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">mean_temp =</span> <span class="fu">average_fn</span>(temp)) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(year <span class="sc">==</span> year_input, month_numeric <span class="sc">==</span> month_input)</span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>  average_temp <span class="ot">&lt;-</span> filtered_data<span class="sc">$</span>mean_temp</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># transfer into celsius if necessary</span></span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (celsius) {</span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>    average_temp <span class="ot">&lt;-</span> (average_temp <span class="sc">-</span> <span class="dv">32</span>) <span class="sc">*</span> <span class="dv">5</span><span class="sc">/</span><span class="dv">9</span></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(average_temp)</span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally, we check whether the code works.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># valid input</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">get_temp</span>(<span class="st">"Apr"</span>, <span class="dv">1999</span>, <span class="at">data =</span> nnmaps)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'year'. You can override using the
+`.groups` argument.</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4</code></pre>
+<pre><code>[1] 49.8</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_temp</span>(<span class="st">"Apr"</span>, <span class="dv">1999</span>, <span class="at">data =</span> nnmaps, <span class="at">celsius =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'year'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9.888889</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_temp</span>(<span class="dv">10</span>, <span class="dv">1998</span>, <span class="at">data =</span> nnmaps, <span class="at">average_fn =</span> median)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'year'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 55</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_temp</span>(<span class="st">"November"</span>, <span class="dv">1999</span>, <span class="at">data =</span>nnmaps, <span class="at">celsius =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">average_fn =</span> <span class="cf">function</span>(x) {</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>           x <span class="sc">%&gt;%</span> sort <span class="ot">-&gt;</span> x</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>           x[<span class="dv">2</span><span class="sc">:</span>(<span class="fu">length</span>(x) <span class="sc">-</span> <span class="dv">1</span>)] <span class="sc">%&gt;%</span> mean <span class="sc">%&gt;%</span> return</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>         })</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'year'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7.301587</code></pre>
 </div>
 </div>
-<p>The <code>echo: false</code> option disables the printing of code (only output is displayed).</p>
+<p>If the input is valid, we can get a result. When the input is invalid, it can produce a reasonable error message.</p>
 </section>
 
 </main>
