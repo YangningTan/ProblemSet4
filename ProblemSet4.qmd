@@ -28,7 +28,7 @@ library(tidyverse)
     tb_flights <- nycflights13::flights
 
     tb_flights %>% 
-      inner_join(nycflights13::airports, by = c("origin" = "faa")) %>% 
+      left_join(nycflights13::airports, by = c("origin" = "faa")) %>% 
       select(name, dep_delay) %>% 
       group_by(name) %>% 
       summarise(dep_delay_mean = mean(dep_delay, na.rm = TRUE),
@@ -39,7 +39,7 @@ library(tidyverse)
     ```{r}
     # mean and median of arrival delay
     tb_flights %>%
-      inner_join(nycflights13::airports, by = c("dest" = "faa")) %>%
+      left_join(nycflights13::airports, by = c("dest" = "faa")) %>%
       group_by(dest) %>%
       filter(n() >= 10) %>%
       ungroup() %>% 
@@ -48,6 +48,37 @@ library(tidyverse)
       summarise(arr_delay_mean = mean(arr_delay, na.rm = TRUE),
                 arr_delay_median = median(arr_delay, na.rm = TRUE)) %>% 
       arrange(desc(arr_delay_mean))
+    ```
+
+2.  How many flights did the aircraft model with the fastest average speed take? Produce a tibble with 1 row, and entires for the model, average speed (in MPH) and number of flights.
+
+    We first create a tibble of the planes.
+
+    ```{r}
+    tb_planes <- nycflights13::planes
+    ```
+
+    We need to get the average speed of each aircraft. To do this, we join the tibble of flights and planes.
+
+    ```{r}
+    tb_flights %>% 
+      left_join(tb_planes, by = c("tailnum" = "tailnum")) %>% 
+      select(model, distance, hour, minute) %>% 
+      group_by(model) %>% 
+      summarise(total_distance = sum(distance),
+                total_time = sum(hour) + sum(minute) / 60,
+                average_speed = total_distance / total_time,
+                number_of_flights = n()) %>% 
+      ungroup() -> average_speed
+    ```
+
+    Then, we can find out the model of plane with the fastest average speed.
+
+    ```{r}
+    average_speed %>% 
+      filter(average_speed == max(average_speed)) %>% 
+      select(model, average_speed, number_of_flights) -> fastest_model
+    fastest_model
     ```
 
 ## Running Code
