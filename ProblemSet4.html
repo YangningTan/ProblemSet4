@@ -325,7 +325,7 @@ run;
 
 proc sql;
   create table fin_filtered as
-  select CaseID, B3, ND2, B7_a, GH1, ppeducat, race_5cat ,weight_pop
+  select CaseID, B3, ND2, B7_b, GH1, ppeducat, race_5cat ,weight_pop
   from fin;
 quit;</code></pre></li>
 <li><p>Get the data out of SAS and into Stata.&nbsp;</p>
@@ -335,7 +335,9 @@ quit;</code></pre></li>
     dbms=csv;
 run;</code></pre></li>
 <li><p>Demonstrate that you’ve successfully extracted the appropriate data by showing the number of observations and variables.</p>
-<pre><code>
+<pre><code>import delimited "/Users/tyn/Documents/Stata/fin.csv"
+describe
+
 Contains data
  Observations:        11,667                  
     Variables:             8                  
@@ -346,7 +348,7 @@ Variable      Storage   Display    Value
 caseid          int     %8.0g                 CaseID
 b3              byte    %8.0g                 B3
 nd2             byte    %8.0g                 ND2
-b7_a            byte    %8.0g                 B7_a
+b7_b            byte    %8.0g                 B7_b
 gh1             byte    %8.0g                 GH1
 ppeducat        byte    %8.0g                 
 race_5cat       byte    %8.0g                 
@@ -358,47 +360,49 @@ weight_pop      float   %9.0g
 .replace fin_sit = 1 if b3 &gt;= 3</code></pre></li>
 <li><p>Carry out a logisitic regression model accounting for the complex survey design. Be sure to treat variables you think should be categorical appropriately. From these results, provide an answer to the researchers question of interest.</p>
 <pre><code>.svyset caseid [pw=weight_pop]
-.svy: logit fin_sit nd2 i.b7_a i.gh1 i.ppeducat i.ppethm
+.svy: logit fin_sit i.nd2 i.b7_b i.gh1 i.ppeducat i.race_5cat
 
 Survey: Logistic regression
 
 Number of strata =      1                        Number of obs   =      11,667
 Number of PSUs   = 11,667                        Population size = 255,114,223
                                                  Design df       =      11,666
-                                                 F(14, 11653)    =       66.18
+                                                 F(17, 11650)    =       56.70
                                                  Prob &gt; F        =      0.0000
 
 ------------------------------------------------------------------------------
              |             Linearized
      fin_sit | Coefficient  std. err.      t    P&gt;|t|     [95% conf. interval]
 -------------+----------------------------------------------------------------
-         nd2 |   .0129984   .0301666     0.43   0.667    -.0461333      .07213
+         nd2 |
+          2  |   .0816722   .0925755     0.88   0.378    -.0997913    .2631356
+          3  |   .0618535   .0854686     0.72   0.469    -.1056792    .2293863
+          4  |   .2533888   .2045978     1.24   0.216    -.1476572    .6544347
+          5  |    .229354   .1672799     1.37   0.170    -.0985426    .5572505
              |
-        b7_a |
-          2  |   .8073133   .0599228    13.47   0.000     .6898546    .9247721
-          3  |   1.762449   .0678032    25.99   0.000     1.629544    1.895355
-          4  |   2.610153    .198261    13.17   0.000     2.221528    2.998778
+        b7_b |
+          2  |   1.110649   .0488662    22.73   0.000     1.014863    1.206435
+          3  |   1.806251   .0796863    22.67   0.000     1.650052    1.962449
+          4  |   2.485125   .3463415     7.18   0.000     1.806238    3.164013
              |
          gh1 |
-          2  |  -.0312602   .0563695    -0.55   0.579    -.1417537    .0792334
-          3  |   .1215956   .0588709     2.07   0.039     .0061987    .2369924
-          4  |   .3738337   .0977268     3.83   0.000     .1822728    .5653945
+          2  |  -.0702921    .056382    -1.25   0.213    -.1808102     .040226
+          3  |   .0190607   .0587346     0.32   0.746    -.0960689    .1341904
+          4  |   .3465325   .0994184     3.49   0.000     .1516557    .5414092
              |
     ppeducat |
-          2  |  -.0201906   .1020569    -0.20   0.843    -.2202393    .1798581
-          3  |   .0137566   .0989573     0.14   0.889    -.1802162    .2077295
-          4  |   .0792432    .098587     0.80   0.422    -.1140038    .2724902
+          2  |   .0767668   .1036364     0.74   0.459    -.1263778    .2799115
+          3  |   .1075004   .1008067     1.07   0.286    -.0900975    .3050983
+          4  |   .2288346    .099574     2.30   0.022     .0336528    .4240164
              |
    race_5cat |
-          2  |   .8657323   .0806826    10.73   0.000     .7075809    1.023884
-          3  |   .2735008   .0706689     3.87   0.000     .1349779    .4120236
-          4  |   .5574518   .1242417     4.49   0.000     .3139174    .8009862
-          5  |   .0153919   .1672565     0.09   0.927    -.3124588    .3432426
+          2  |   .7060141   .0810818     8.71   0.000     .5470803     .864948
+          3  |   .1635498   .0711263     2.30   0.021     .0241303    .3029693
+          4  |   .4567994   .1259942     3.63   0.000     .2098298    .7037691
+          5  |  -.0210142   .1659436    -0.13   0.899    -.3462915    .3042631
              |
-       _cons |  -.6296823    .135684    -4.64   0.000    -.8956456    -.363719
-------------------------------------------------------------------------------
-
-. </code></pre>
+       _cons |  -.4852955   .1301287    -3.73   0.000    -.7403696   -.2302214
+------------------------------------------------------------------------------</code></pre>
 <p>We can see from the result of the logistic regression that when other variables are controlled, the p-value of variable “nd2” is greater than 0.05. Therefore, we get the conclusion that the coefficient is positive. This implies that <strong>the respondent’s family is better off, the same, or worse off finanicially compared to 12 month’s ago</strong>&nbsp;CAN be predicted by&nbsp;<strong>thinking that the chance of experiencing a natural disaster or severe weather event will be higher, lower or about the same in 5 years</strong>.</p></li>
 <li><p>Get the data out of Stata and into R.</p>
 <pre><code>.export delimited using "fin_2.csv", replace</code></pre></li>
@@ -440,14 +444,15 @@ Attaching package: 'survey'</code></pre>
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set up the complex survey design</span></span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>svy_design <span class="ot">&lt;-</span> <span class="fu">svydesign</span>(<span class="at">id =</span> <span class="sc">~</span> caseid, <span class="at">weight =</span> <span class="sc">~</span> weight_pop, <span class="at">data =</span> dat)</span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co"># fit the logistic regression model</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>survey_logit_model <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(fin_sit <span class="sc">~</span> nd2 <span class="sc">+</span> <span class="fu">as.factor</span>(b7_a) <span class="sc">+</span> <span class="fu">as.factor</span>(gh1) <span class="sc">+</span> <span class="fu">as.factor</span>(ppeducat) <span class="sc">+</span> <span class="fu">as.factor</span>(race_5cat), <span class="at">design =</span> svy_design, <span class="at">family =</span> quasibinomial)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>survey_logit_model <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(fin_sit <span class="sc">~</span> <span class="fu">as.factor</span>(nd2) <span class="sc">+</span> <span class="fu">as.factor</span>(b7_b) <span class="sc">+</span> <span class="fu">as.factor</span>(gh1) <span class="sc">+</span> <span class="fu">as.factor</span>(ppeducat) <span class="sc">+</span> <span class="fu">as.factor</span>(race_5cat), <span class="at">design =</span> svy_design, <span class="at">family =</span> quasibinomial)</span>
 <span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="co"># compute the pseudo R squared</span></span>
 <span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>pseudo_r2 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> survey_logit_model<span class="sc">$</span>deviance <span class="sc">/</span> survey_logit_model<span class="sc">$</span>null.deviance</span>
 <span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>pseudo_r2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.08713772</code></pre>
+<pre><code>[1] 0.08967482</code></pre>
 </div>
-</div></li>
+</div>
+<p>The pseudo-<span class="math inline">\(R^2\)</span> is approximately 0.08967482.</p></li>
 </ol>
 </section>
 
