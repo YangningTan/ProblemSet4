@@ -161,3 +161,140 @@ get_temp("November", 1999, data =nnmaps, celsius = TRUE,
 ```
 
 If the input is valid, we can get a result. When the input is invalid, it can produce a reasonable error message.
+
+## Problem 4
+
+a.  Take a look at the Codebook. For very minor extra credit, how was the Codebook generated?
+
+    It indicates the origin of the data set. In fact, some of the data is not included in this public version. Also, it lists all the variables. For each variable, it further provides a summary.
+
+b.  Import the data into SAS and use `proc sql` to select only the variables you'll need for your analysis, as well as subsetting the data if needed.
+
+    ```         
+    data fin;
+     set in_lib.public2022;
+    run;
+
+    proc sql;
+      create table fin_filtered as
+      select CaseID, B3, ND2, B7_a, GH1, ppeducat, race_5cat ,weight_pop
+      from fin;
+    quit;
+    ```
+
+c.  Get the data out of SAS and into Stata. 
+
+    We export a csv file from SAS first.
+
+    ```         
+    proc export data=fin_filtered
+        outfile = "&out_path./fin.csv"
+        dbms=csv;
+    run;
+    ```
+
+d.  Demonstrate that you've successfully extracted the appropriate data by showing the number of observations and variables.
+
+    ```         
+
+    Contains data
+     Observations:        11,667                  
+        Variables:             8                  
+    -----------------------------------------------------------------------------------------
+    Variable      Storage   Display    Value
+        name         type    format    label      Variable label
+    -----------------------------------------------------------------------------------------
+    caseid          int     %8.0g                 CaseID
+    b3              byte    %8.0g                 B3
+    nd2             byte    %8.0g                 ND2
+    b7_a            byte    %8.0g                 B7_a
+    gh1             byte    %8.0g                 GH1
+    ppeducat        byte    %8.0g                 
+    race_5cat       byte    %8.0g                 
+    weight_pop      float   %9.0g                 
+    -----------------------------------------------------------------------------------------
+    ```
+
+e.  The response variable is a Likert scale; convert it to a binary of worse off versus same/better.
+
+    ```         
+    .gen fin_sit = .
+    .replace fin_sit = 0 if b3 <= 2
+    .replace fin_sit = 1 if b3 >= 3
+    ```
+
+f.  Carry out a logisitic regression model accounting for the complex survey design. Be sure to treat variables you think should be categorical appropriately. From these results, provide an answer to the researchers question of interest.
+
+    ```         
+    .svyset caseid [pw=weight_pop]
+    .svy: logit fin_sit nd2 i.b7_a i.gh1 i.ppeducat i.ppethm
+
+    Survey: Logistic regression
+
+    Number of strata =      1                        Number of obs   =      11,667
+    Number of PSUs   = 11,667                        Population size = 255,114,223
+                                                     Design df       =      11,666
+                                                     F(14, 11653)    =       66.18
+                                                     Prob > F        =      0.0000
+
+    ------------------------------------------------------------------------------
+                 |             Linearized
+         fin_sit | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+    -------------+----------------------------------------------------------------
+             nd2 |   .0129984   .0301666     0.43   0.667    -.0461333      .07213
+                 |
+            b7_a |
+              2  |   .8073133   .0599228    13.47   0.000     .6898546    .9247721
+              3  |   1.762449   .0678032    25.99   0.000     1.629544    1.895355
+              4  |   2.610153    .198261    13.17   0.000     2.221528    2.998778
+                 |
+             gh1 |
+              2  |  -.0312602   .0563695    -0.55   0.579    -.1417537    .0792334
+              3  |   .1215956   .0588709     2.07   0.039     .0061987    .2369924
+              4  |   .3738337   .0977268     3.83   0.000     .1822728    .5653945
+                 |
+        ppeducat |
+              2  |  -.0201906   .1020569    -0.20   0.843    -.2202393    .1798581
+              3  |   .0137566   .0989573     0.14   0.889    -.1802162    .2077295
+              4  |   .0792432    .098587     0.80   0.422    -.1140038    .2724902
+                 |
+       race_5cat |
+              2  |   .8657323   .0806826    10.73   0.000     .7075809    1.023884
+              3  |   .2735008   .0706689     3.87   0.000     .1349779    .4120236
+              4  |   .5574518   .1242417     4.49   0.000     .3139174    .8009862
+              5  |   .0153919   .1672565     0.09   0.927    -.3124588    .3432426
+                 |
+           _cons |  -.6296823    .135684    -4.64   0.000    -.8956456    -.363719
+    ------------------------------------------------------------------------------
+
+    . 
+    ```
+
+    We can see from the result of the logistic regression that when other variables are controlled, the p-value of variable "nd2" is greater than 0.05. Therefore, we get the conclusion that the coefficient is positive. This implies that **the respondent's family is better off, the same, or worse off finanicially compared to 12 month's ago** CAN be predicted by **thinking that the chance of experiencing a natural disaster or severe weather event will be higher, lower or about the same in 5 years**.
+
+g.  Get the data out of Stata and into R.
+
+    ```         
+    .export delimited using "fin_2.csv", replace
+    ```
+
+h.  Obtain the pseudo-$R^2$ value for the logistic model fit above and report it.
+
+    We first import the data.
+
+    ```{r}
+    dat <- read.csv("/Users/tyn/Documents/R/fin_2.csv")
+    ```
+
+    Now, we obtain the pseudo-$R^2$.
+
+    ```{r}
+    library(survey)
+    # set up the complex survey design
+    svy_design <- svydesign(id = ~ caseid, weight = ~ weight_pop, data = dat)
+    # fit the logistic regression model
+    survey_logit_model <- svyglm(fin_sit ~ nd2 + as.factor(b7_a) + as.factor(gh1) + as.factor(ppeducat) + as.factor(race_5cat), design = svy_design, family = quasibinomial)
+    # compute the pseudo R squared
+    pseudo_r2 <- 1 - survey_logit_model$deviance / survey_logit_model$null.deviance
+    pseudo_r2
+    ```
