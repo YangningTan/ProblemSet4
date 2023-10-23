@@ -313,6 +313,102 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>If the input is valid, we can get a result. When the input is invalid, it can produce a reasonable error message.</p>
 </section>
+<section id="problem-3" class="level2">
+<h2 class="anchored" data-anchor-id="problem-3">Problem 3</h2>
+<p>We first import the data set.</p>
+<pre><code>/* data libraries for reading/writing data: -------------------------------- */
+%let in_path = ~/sasuser/input_data;
+%let out_path = ~/sasuser/output_data; 
+libname in_lib "&amp;in_path."; 
+libname out_lib "&amp;out_path.";
+
+/* import data */
+data recs; 
+ set in_lib.recs2020_public_v5; </code></pre>
+<ol type="a">
+<li><p>What state has the highest percentage of records? What percentage of all records correspond to Michigan?&nbsp;</p>
+<pre><code>data recs_filtered;
+   set recs;
+   keep state_name NWEIGHT;
+run;
+
+proc summary data=recs_filtered nway;
+  class state_name;
+  var NWEIGHT;
+  output out=state_nweight sum(NWEIGHT)=NWEIGHT;
+run;
+
+proc sql;
+  select sum(NWEIGHT) into :total_NWEIGHT
+  from state_nweight;
+quit;
+
+data state_nweight;
+  set state_nweight;
+  percentage = (NWEIGHT / &amp;total_NWEIGHT) * 100;
+run;</code></pre>
+<p>The state with the highest percentage of record is California.</p>
+<p>The percentage corresponds to Michigan is 3.1724415122.</p></li>
+<li><p>Generate a histogram of the total electricity cost in dollars, amongst those with a strictly positive cost.</p>
+<pre><code>data recs_electric;
+ set recs(keep=DOLLAREL);
+ where DOLLAREL &gt; 0;
+run;
+
+proc univariate data=recs_electric;
+  histogram DOLLAREL / midpoints=5 to 50 by 5;
+run; </code></pre></li>
+<li><p>Generate a histogram of the log of the total electricity cost.</p>
+<pre><code>data recs_electric_log;
+  set recs_electric;
+  log_DOLLAREL = log(DOLLAREL);
+run;
+
+proc univariate data=recs_electric_log;
+  histogram log_DOLLAREL / midpoints=2 to 5 by 0.2;
+run;</code></pre></li>
+<li><p>Fit a linear regression model predicting the log of the total electricity cost based upon the number of rooms in the house and whether or not the house has a garage.</p>
+<pre><code>data recs_regression;
+ set recs;
+ where DOLLAREL &gt; 0;
+ where PRKGPLC1 &gt; -1;
+ keep DOEID DOLLAREL TOTROOMS PRKGPLC1 NWEIGHT;
+ /*log_DOLLAREL = log(DOLLAREL);*/
+run;
+
+data recs_regression_log;
+ set recs_regression;
+ log_DOLLAREL = log(DOLLAREL);
+run;
+
+proc reg data=recs_regression_log outest=reg_model;
+  model log_DOLLAREL = TOTROOMS PRKGPLC1;
+  weight NWEIGHT;
+run;</code></pre></li>
+<li><p>Use that model to generate predicted values and create a scatterplot of predicted total electricity cost vs actual total electricity cost.</p>
+<pre><code>proc reg data=recs_regression_log outest=reg_model;
+  model log_DOLLAREL = TOTROOMS PRKGPLC1;
+  weight NWEIGHT;
+  output out=predicted_values_log predicted=log_DOLLAREL_pred;
+run;
+
+data recs_predicted_log;
+  merge recs_regression_log predicted_values_log;
+  by DOEID;
+run;
+
+data recs_predicted;
+  set recs_predicted_log;
+  DOLLAREL_pred = exp(log_DOLLAREL_pred);
+run;
+
+proc sgplot data=recs_predicted;
+  scatter x=DOLLAREL y=DOLLAREL_pred;
+  xaxis label="actual total electricity cost";
+  yaxis label="predicted total electricity cost";
+run;</code></pre></li>
+</ol>
+</section>
 <section id="problem-4" class="level2">
 <h2 class="anchored" data-anchor-id="problem-4">Problem 4</h2>
 <ol type="a">
@@ -409,11 +505,11 @@ Number of PSUs   = 11,667                        Population size = 255,114,223
 <li><p>Obtain the pseudo-<span class="math inline">\(R^2\)</span> value for the logistic model fit above and report it.</p>
 <p>We first import the data.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"/Users/tyn/Documents/R/fin_2.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"/Users/tyn/Documents/R/fin_2.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now, we obtain the pseudo-<span class="math inline">\(R^2\)</span>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survey)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survey)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Loading required package: grid</code></pre>
 </div>
@@ -441,13 +537,13 @@ Attaching package: 'survey'</code></pre>
 
     dotchart</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set up the complex survey design</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>svy_design <span class="ot">&lt;-</span> <span class="fu">svydesign</span>(<span class="at">id =</span> <span class="sc">~</span> caseid, <span class="at">weight =</span> <span class="sc">~</span> weight_pop, <span class="at">data =</span> dat)</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co"># fit the logistic regression model</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>survey_logit_model <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(fin_sit <span class="sc">~</span> <span class="fu">as.factor</span>(nd2) <span class="sc">+</span> <span class="fu">as.factor</span>(b7_b) <span class="sc">+</span> <span class="fu">as.factor</span>(gh1) <span class="sc">+</span> <span class="fu">as.factor</span>(ppeducat) <span class="sc">+</span> <span class="fu">as.factor</span>(race_5cat), <span class="at">design =</span> svy_design, <span class="at">family =</span> quasibinomial)</span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="co"># compute the pseudo R squared</span></span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>pseudo_r2 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> survey_logit_model<span class="sc">$</span>deviance <span class="sc">/</span> survey_logit_model<span class="sc">$</span>null.deviance</span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>pseudo_r2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set up the complex survey design</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>svy_design <span class="ot">&lt;-</span> <span class="fu">svydesign</span>(<span class="at">id =</span> <span class="sc">~</span> caseid, <span class="at">weight =</span> <span class="sc">~</span> weight_pop, <span class="at">data =</span> dat)</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="co"># fit the logistic regression model</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>survey_logit_model <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(fin_sit <span class="sc">~</span> <span class="fu">as.factor</span>(nd2) <span class="sc">+</span> <span class="fu">as.factor</span>(b7_b) <span class="sc">+</span> <span class="fu">as.factor</span>(gh1) <span class="sc">+</span> <span class="fu">as.factor</span>(ppeducat) <span class="sc">+</span> <span class="fu">as.factor</span>(race_5cat), <span class="at">design =</span> svy_design, <span class="at">family =</span> quasibinomial)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="co"># compute the pseudo R squared</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>pseudo_r2 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> survey_logit_model<span class="sc">$</span>deviance <span class="sc">/</span> survey_logit_model<span class="sc">$</span>null.deviance</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>pseudo_r2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.08967482</code></pre>
 </div>

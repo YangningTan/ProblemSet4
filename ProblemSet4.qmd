@@ -162,6 +162,125 @@ get_temp("November", 1999, data =nnmaps, celsius = TRUE,
 
 If the input is valid, we can get a result. When the input is invalid, it can produce a reasonable error message.
 
+## Problem 3
+
+We first import the data set.
+
+```         
+/* data libraries for reading/writing data: -------------------------------- */
+%let in_path = ~/sasuser/input_data;
+%let out_path = ~/sasuser/output_data; 
+libname in_lib "&in_path."; 
+libname out_lib "&out_path.";
+
+/* import data */
+data recs; 
+ set in_lib.recs2020_public_v5; 
+```
+
+a.  What state has the highest percentage of records? What percentage of all records correspond to Michigan? 
+
+    ```         
+    data recs_filtered;
+       set recs;
+       keep state_name NWEIGHT;
+    run;
+
+    proc summary data=recs_filtered nway;
+      class state_name;
+      var NWEIGHT;
+      output out=state_nweight sum(NWEIGHT)=NWEIGHT;
+    run;
+
+    proc sql;
+      select sum(NWEIGHT) into :total_NWEIGHT
+      from state_nweight;
+    quit;
+
+    data state_nweight;
+      set state_nweight;
+      percentage = (NWEIGHT / &total_NWEIGHT) * 100;
+    run;
+    ```
+
+    The state with the highest percentage of record is California.
+
+    The percentage corresponds to Michigan is 3.1724415122.
+
+b.  Generate a histogram of the total electricity cost in dollars, amongst those with a strictly positive cost.
+
+    ```         
+    data recs_electric;
+     set recs(keep=DOLLAREL);
+     where DOLLAREL > 0;
+    run;
+
+    proc univariate data=recs_electric;
+      histogram DOLLAREL / midpoints=5 to 50 by 5;
+    run; 
+    ```
+
+c.  Generate a histogram of the log of the total electricity cost.
+
+    ```         
+    data recs_electric_log;
+      set recs_electric;
+      log_DOLLAREL = log(DOLLAREL);
+    run;
+
+    proc univariate data=recs_electric_log;
+      histogram log_DOLLAREL / midpoints=2 to 5 by 0.2;
+    run;
+    ```
+
+d.  Fit a linear regression model predicting the log of the total electricity cost based upon the number of rooms in the house and whether or not the house has a garage.
+
+    ```         
+    data recs_regression;
+     set recs;
+     where DOLLAREL > 0;
+     where PRKGPLC1 > -1;
+     keep DOEID DOLLAREL TOTROOMS PRKGPLC1 NWEIGHT;
+     /*log_DOLLAREL = log(DOLLAREL);*/
+    run;
+
+    data recs_regression_log;
+     set recs_regression;
+     log_DOLLAREL = log(DOLLAREL);
+    run;
+
+    proc reg data=recs_regression_log outest=reg_model;
+      model log_DOLLAREL = TOTROOMS PRKGPLC1;
+      weight NWEIGHT;
+    run;
+    ```
+
+e.  Use that model to generate predicted values and create a scatterplot of predicted total electricity cost vs actual total electricity cost.
+
+    ```         
+    proc reg data=recs_regression_log outest=reg_model;
+      model log_DOLLAREL = TOTROOMS PRKGPLC1;
+      weight NWEIGHT;
+      output out=predicted_values_log predicted=log_DOLLAREL_pred;
+    run;
+
+    data recs_predicted_log;
+      merge recs_regression_log predicted_values_log;
+      by DOEID;
+    run;
+
+    data recs_predicted;
+      set recs_predicted_log;
+      DOLLAREL_pred = exp(log_DOLLAREL_pred);
+    run;
+
+    proc sgplot data=recs_predicted;
+      scatter x=DOLLAREL y=DOLLAREL_pred;
+      xaxis label="actual total electricity cost";
+      yaxis label="predicted total electricity cost";
+    run;
+    ```
+
 ## Problem 4
 
 a.  Take a look at the Codebook. For very minor extra credit, how was the Codebook generated?
